@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -38,6 +39,8 @@ export default function Login() {
       setEmail("");
       setPassword("");
       setShow(false);
+      Cookies.set("token", res.data.token, { expires: 1, secure: true, sameSite: "Strict" });
+      localStorage.setItem("email", email);
       Go("/");
     } catch (err) {
       console.log(err.response?.data || err.message);

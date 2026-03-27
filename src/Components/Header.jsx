@@ -1,9 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const Go = useNavigate();
 
+  function handleLogout() {
+    localStorage.removeItem("email");
+    Go("/login");
+  }
   return (
     <header className="bg-white shadow-md">
       <nav className="max-w-6xl mx-auto flex items-center justify-between p-4">
@@ -27,17 +32,29 @@ export default function Header() {
         </ul>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex gap-3">
-          <Link
-            to="/register"
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition"
+        {!localStorage.getItem("email") ? (
+          <div className="hidden md:flex gap-3">
+            <Link
+              to="/register"
+              className="px-4 py-2 border border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition"
+            >
+              Register
+            </Link>
+            <Link
+              to="/login"
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+            >
+              Log in
+            </Link>
+          </div>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 hidden md:flex bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition cursor-pointer"
           >
-            Register
-          </Link>
-          <Link to="/login" className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
-            Log in
-          </Link>
-        </div>
+            Log out
+          </button>
+        )}
 
         {/* Mobile Button */}
         <button
@@ -66,18 +83,31 @@ export default function Header() {
           >
             Books
           </Link>
+          {!localStorage.getItem("email") ? (
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/register"
+                className="block text-blue-600 border border-blue-600 rounded-xl text-center py-2 hover:bg-blue-50"
+                onClick={() => setOpen(false)}
+              >
+                Register
+              </Link>
 
-          <Link
-            to="/register"
-            className="block text-blue-600 border border-blue-600 rounded-xl text-center py-2 hover:bg-blue-50"
-            onClick={() => setOpen(false)}
-          >
-            Register
-          </Link>
-
-          <Link to="/login" className="w-full bg-blue-600 text-white rounded-xl py-2 hover:bg-blue-700">
-            Log in
-          </Link>
+              <Link
+                to="/login"
+                className="block bg-blue-600 text-white rounded-xl py-2 hover:bg-blue-700 text-center"
+              >
+                Log in
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="w-full bg-blue-600 text-white rounded-xl py-2 hover:bg-blue-700"
+            >
+              Log out
+            </button>
+          )}
         </div>
       )}
     </header>
