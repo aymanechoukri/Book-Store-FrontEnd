@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -95,7 +96,7 @@ export default function Login() {
                   onClick={() => setShow(!show)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                 >
-                  {show ? "Hide" : "Show"}
+                   <i className={`fa-solid ${show ? "fa-eye-slash" : "fa-eye"}`}></i>
                 </button>
               </div>
             </div>
