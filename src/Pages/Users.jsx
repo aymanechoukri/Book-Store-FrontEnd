@@ -18,6 +18,16 @@ export default function Users() {
     getUsers();
   }, []);
 
+  async function handelDelete(id) {
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${id}`);
+      
+      setUsers(users.filter(user => user._id !== id));
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+    }
+  }
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
@@ -61,7 +71,10 @@ export default function Users() {
                       </span>
                     </td>
                     <td className="px-6 py-4 space-x-2">
-                      <button className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1">
+                      <button
+                        onClick={() => handelDelete(user._id)}
+                        className="px-3 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1"
+                      >
                         <i className="fa-solid fa-trash"></i> Delete
                       </button>
                     </td>

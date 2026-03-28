@@ -8,7 +8,8 @@ export default function Header() {
   const token = Cookies.get("token");
 
   function handleLogout() {
-    token.removeItem("token");
+    Cookies.remove("token");
+    Cookies.remove("role");
     Go("/login");
   }
   return (

@@ -18,7 +18,7 @@ export default function TopBar() {
       <nav className="max-w-7xl mx-auto flex items-center justify-between p-4">
         
         {/* Logo */}
-        <h1 className="text-2xl sm:text-3xl bungee-regular bg-gradient-to-r from-blue-600 to-blue-300 bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl bungee-regular bg-linear-to-r from-blue-600 to-blue-300 bg-clip-text text-transparent">
           Dashboard
         </h1>
 

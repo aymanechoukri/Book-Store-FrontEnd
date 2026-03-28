@@ -115,7 +115,9 @@ export default function Register() {
                   onClick={() => setShow(!show)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                 >
-                   <i className={`fa-solid ${show ? "fa-eye-slash" : "fa-eye"}`}></i>
+                  <i
+                    className={`fa-solid ${show ? "fa-eye-slash" : "fa-eye"}`}
+                  ></i>
                 </button>
               </div>
             </div>

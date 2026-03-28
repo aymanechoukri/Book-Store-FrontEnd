@@ -33,15 +33,21 @@ export default function Login() {
         password,
       });
 
-      console.log(res.data);
       toast.success("Login successful!");
 
       // Reset form
       setEmail("");
       setPassword("");
       setShow(false);
-      Cookies.set("token", res.data.token, { expires: 1, secure: true, sameSite: "Strict" });
-      localStorage.setItem("email", email);
+      Cookies.set("token", res.data.token, {
+        expires: 1,
+        secure: true,
+        sameSite: "Strict",
+      });
+      Cookies.set("role", res.data.role, {
+        expires: 1,
+        sameSite: "Strict",
+      });
       Go("/");
     } catch (err) {
       console.log(err.response?.data || err.message);
@@ -96,7 +102,9 @@ export default function Login() {
                   onClick={() => setShow(!show)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                 >
-                   <i className={`fa-solid ${show ? "fa-eye-slash" : "fa-eye"}`}></i>
+                  <i
+                    className={`fa-solid ${show ? "fa-eye-slash" : "fa-eye"}`}
+                  ></i>
                 </button>
               </div>
             </div>
