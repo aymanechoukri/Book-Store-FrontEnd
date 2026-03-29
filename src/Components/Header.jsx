@@ -51,12 +51,19 @@ export default function Header() {
             </Link>
           </div>
         ) : (
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 hidden md:flex bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition cursor-pointer"
-          >
-            Log out
-          </button>
+          <div className="hidden md:flex gap-3">
+            {Cookies.get("role") === "admin" && (
+              <Link to="/dashboard" className="px-4 py-2 text-blue-600 rounded-xl hover:bg-blue-50 transition">
+                Dashboard
+              </Link>
+            )}
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 hidden md:flex bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition cursor-pointer"
+            >
+              Log out
+            </button>
+          </div>
         )}
 
         {/* Mobile Button */}

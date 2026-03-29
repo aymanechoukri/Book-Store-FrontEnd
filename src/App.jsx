@@ -4,6 +4,8 @@ import Register from "./Pages/Register";
 import Login from "./Pages/Login";
 import Dashboard from "./Pages/Dashboard";
 import Users from "./Pages/Users";
+import AddBooks from "./Pages/AddBooks";
+import Books from "./Pages/Books";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
 
           <Route path="dashboard" element={<Dashboard />} >
             <Route path="users" element={<Users />} />
+            <Route path="add-books" element={<AddBooks />} />
+            <Route path="books" element={<Books />} />
           </Route>
         </Routes>
       </BrowserRouter>

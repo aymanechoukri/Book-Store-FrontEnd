@@ -5,8 +5,8 @@ export function SideBar() {
 
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: "fa-solid fa-gauge" },
-    { name: "Books", path: "/books", icon: "fa-book" },
-    { name: "Add Book", path: "/add-book", icon: "fa-plus" },
+    { name: "Books", path: "/dashboard/books", icon: "fa-book" },
+    { name: "Add Book", path: "/dashboard/add-books", icon: "fa-plus" },
     { name: "Users", path: "/dashboard/users", icon: "fa-users" },
   ];
 
