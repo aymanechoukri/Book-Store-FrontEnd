@@ -28,7 +28,7 @@ export default function Header() {
             </Link>
           </li>
           <li>
-            <Link to="/books" className="hover:text-blue-600 transition">
+            <Link to="/AllBooks" className="hover:text-blue-600 transition">
               Books
             </Link>
           </li>
@@ -87,7 +87,7 @@ export default function Header() {
           </Link>
 
           <Link
-            to="/books"
+            to="/AllBooks"
             className="block text-gray-700 hover:text-blue-600"
             onClick={() => setOpen(false)}
           >

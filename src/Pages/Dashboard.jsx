@@ -37,7 +37,7 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col">
         <TopBar />
 
-        <main className="p-6 bg-gray-100 ">
+        <main className="p-6">
           <Outlet />
         </main>
       </div>
