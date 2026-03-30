@@ -31,13 +31,13 @@ export default function Dashboard() {
   }, [navigate]);
 
   return (
-    <div className="flex">
+    <div className="flex ">
       <SideBar />
 
       <div className="flex-1 flex flex-col">
         <TopBar />
 
-        <main className="p-6 bg-gray-100 min-h-screen">
+        <main className="p-6 bg-gray-100 ">
           <Outlet />
         </main>
       </div>

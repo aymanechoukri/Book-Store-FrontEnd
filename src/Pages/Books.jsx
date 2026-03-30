@@ -16,7 +16,6 @@ export default function Books() {
     getBooks();
   }, []);
 
-  // ✅ حذف كتاب
   async function handleDelete(id) {
     try {
       await axios.delete(`http://localhost:5000/api/books/${id}`);
@@ -27,7 +26,7 @@ export default function Books() {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100">
       <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">
@@ -67,7 +66,7 @@ export default function Books() {
                     <td className="px-6 py-4">{book.category}</td>
                     <td className="px-6 py-4">
                       <img
-                        src={book.image}
+                        src={`http://localhost:5000/uploads/${book.image}`} // adjust if backend serves images differently
                         alt={book.title}
                         className="w-16 h-16 object-cover rounded"
                       />

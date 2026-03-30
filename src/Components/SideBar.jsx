@@ -11,7 +11,7 @@ export function SideBar() {
   ];
 
   return (
-    <aside className="w-64 h-screen bg-white shadow-md p-5 hidden md:flex flex-col">
+    <aside className="w-64 h-screen  bg-white shadow-md p-5 hidden md:flex flex-col">
       
       {/* Links */}
       <ul className="flex flex-col gap-3">
