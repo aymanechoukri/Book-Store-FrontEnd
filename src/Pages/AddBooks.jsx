@@ -11,6 +11,7 @@ export default function AddBooks() {
   });
 
   const [image, setImage] = useState(null);
+  const [pdf, setPdf] = useState(null); // 👈 PDF
   const [preview, setPreview] = useState("");
   const Go = useNavigate();
 
@@ -22,7 +23,7 @@ export default function AddBooks() {
     });
   };
 
-  // handle file input
+  // handle image
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
@@ -32,7 +33,13 @@ export default function AddBooks() {
     }
   };
 
-  // handle form submit
+  // handle PDF
+  const handlePdfChange = (e) => {
+    const file = e.target.files[0];
+    setPdf(file);
+  };
+
+  // submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -41,22 +48,33 @@ export default function AddBooks() {
       return;
     }
 
+    if (!pdf) {
+      alert("Please select a PDF!");
+      return;
+    }
+
     const data = new FormData();
     data.append("title", form.title);
     data.append("price", form.price);
     data.append("description", form.description);
     data.append("category", form.category);
-    data.append("image", image); // important: must match backend field name
+    data.append("image", image);
+    data.append("pdf", pdf); // 👈 مهم
 
     try {
-      const res = await axios.post("http://localhost:5000/api/books", data);
+      const res = await axios.post("http://localhost:5000/api/books", data, {
+        withCredentials: true, // 👈 مهم إذا عندك auth
+      });
+
       console.log(res.data);
       alert("Book added successfully!");
-      // reset form
+
       setForm({ title: "", price: "", description: "", category: "" });
       setImage(null);
+      setPdf(null);
       setPreview("");
       Go("/dashboard/books");
+
     } catch (err) {
       console.error(err);
       alert("Error adding book: " + (err.response?.data?.message || err.message));
@@ -65,9 +83,12 @@ export default function AddBooks() {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h2 className="text-2xl sm:text-3xl bungee-regular text-[#2563EB] mb-6">Add Book</h2>
+      <h2 className="text-2xl sm:text-3xl bungee-regular text-[#2563EB] mb-6">
+        Add Book
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-3">
+
         <input
           type="text"
           name="title"
@@ -103,6 +124,7 @@ export default function AddBooks() {
           className="w-full border p-2 rounded"
         />
 
+        {/* Image */}
         <input
           type="file"
           accept="image/*"
@@ -116,6 +138,20 @@ export default function AddBooks() {
             alt="preview"
             className="w-full h-40 object-cover rounded"
           />
+        )}
+
+        {/* PDF */}
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={handlePdfChange}
+          className="w-full"
+        />
+
+        {pdf && (
+          <p className="text-sm text-gray-600">
+            Selected PDF: {pdf.name}
+          </p>
         )}
 
         <button
