@@ -1,99 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "../store/cartStore";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Header from "../Components/Header";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-function SimpleCheckoutForm() {
+// Initialize Stripe
+const stripePromise = loadStripe("pk_test_51TH3v2HRtCbtVuM6JXHwhRxFgoPSsVYWwxJuF60OHOCyOpCSzSb7VFEi55jWSSDZYF5EpcDaJCnfUYmz9i7qPKiX00NnUfMQQl");
+
+function CheckoutFormContent() {
   const navigate = useNavigate();
   const { items, clearCart } = useCartStore();
+  const stripe = useStripe();
+  const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvc, setCvc] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [orderId, setOrderId] = useState("");
 
   const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const formatCardNumber = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return value;
-    }
-  };
-
-  const formatExpiry = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + (v.length > 2 ? '/' + v.substring(2, 4) : '');
-    }
-    return v;
-  };
-
-  const handleCardNumberChange = (e) => {
-    const formatted = formatCardNumber(e.target.value);
-    setCardNumber(formatted);
-  };
-
-  const handleExpiryChange = (e) => {
-    const formatted = formatExpiry(e.target.value);
-    setExpiry(formatted);
-  };
-
-  // Validate Card Number using Luhn Algorithm
-  const validateCardNumber = (cardNumber) => {
-    const num = cardNumber.replace(/\s/g, '');
-    if (!/^\d{13,19}$/.test(num)) return false;
-    
-    let sum = 0;
-    let isEven = false;
-    for (let i = num.length - 1; i >= 0; i--) {
-      let digit = parseInt(num[i], 10);
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-      sum += digit;
-      isEven = !isEven;
-    }
-    return sum % 10 === 0;
-  };
-
-  // Validate Expiry Date
-  const validateExpiry = (expiry) => {
-    if (!expiry.includes('/')) return false;
-    const [month, year] = expiry.split('/');
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear() % 100;
-    const currentMonth = currentDate.getMonth() + 1;
-    
-    const expMonth = parseInt(month, 10);
-    const expYear = parseInt(year, 10);
-    
-    if (expMonth < 1 || expMonth > 12) return false;
-    if (expYear < currentYear) return false;
-    if (expYear === currentYear && expMonth < currentMonth) return false;
-    
-    return true;
-  };
-
-  // Validate CVC
-  const validateCVC = (cvc) => {
-    return /^\d{3,4}$/.test(cvc);
-  };
+  // Log when cart updates
+  useEffect(() => {
+    // Cart state updated
+  }, [items, totalPrice, totalItems]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,32 +36,8 @@ function SimpleCheckoutForm() {
       setLoading(true);
       setError("");
 
-      // ✅ Email validation
-      if (!email.includes('@')) {
-        setError("❌ Invalid email address");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Card number validation
-      const cleanCardNumber = cardNumber.replace(/\s/g, '');
-      if (!validateCardNumber(cleanCardNumber)) {
-        setError("❌ Invalid card number (must be 13-19 digits)");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Expiry date validation
-      if (!validateExpiry(expiry)) {
-        setError("❌ Invalid expiry date or card has expired");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ CVC validation
-      if (!validateCVC(cvc)) {
-        setError("❌ Invalid CVC (must be 3 or 4 digits)");
-        setLoading(false);
+      if (!stripe || !elements) {
+        setError("Stripe not loaded yet");
         return;
       }
 
@@ -137,54 +47,68 @@ function SimpleCheckoutForm() {
         return;
       }
 
-      const expiryParts = expiry.split("/");
+      // Step 1: Create payment intent on backend
+      const paymentData = {
+        books: items.map((item) => ({
+          bookId: item._id,
+          quantity: item.quantity,
+        })),
+      };
+      
       const response = await axios.post(
         "http://localhost:5000/api/create-payment-intent",
-        {
-          amount: Math.round(totalPrice * 100),
-          items: items.map((item) => ({
-            bookId: item._id,
-            quantity: item.quantity,
-          })),
-          email,
-          cardData: {
-            number: cardNumber.replace(/\s/g, ''),
-            exp_month: expiryParts[0] || "",
-            exp_year: expiryParts[1] || "",
-            cvc,
-          },
-        },
+        paymentData,
         {
           headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         }
-      ).catch(() => {
-        // If backend endpoint fails, simulate purchase locally
-        console.warn("Backend payment endpoint not ready, simulating locally...");
-        return { data: { success: true, simulated: true } };
+      );
+
+      if (!response.data.success) {
+        setError(response.data.message || "Failed to create payment intent");
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Store clientSecret and orderId
+      const { clientSecret: secret, orderId: ordId } = response.data;
+      setClientSecret(secret);
+      setOrderId(ordId);
+
+      // Step 3: Confirm payment with Stripe
+      const cardElement = elements.getElement(CardElement);
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(secret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            email: email || undefined,
+          }
+        }
       });
 
-      if (response.data.success) {
-        // Save purchases to localStorage (temporary solution)
+      if (stripeError) {
+        setError(stripeError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (paymentIntent.status === "succeeded") {
+        // Save purchases to localStorage
         const existingPurchases = JSON.parse(localStorage.getItem('purchases')) || [];
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substr(2, 5);
         
-        // Give each book in this purchase a unique purchaseId
         const newPurchases = items.map((item, index) => ({
           ...item,
           purchasedAt: new Date().toISOString(),
-          purchaseId: `${Math.random().toString(36).substr(2, 9)}-${index}`, // Unique for each item
+          purchaseId: `${timestamp}-${randomStr}-${item._id}-${index}`,
+          paymentIntentId: paymentIntent.id,
         }));
-        
-        const allPurchases = [...existingPurchases, ...newPurchases];
-        localStorage.setItem('purchases', JSON.stringify(allPurchases));
-        
-        console.log("💾 Saved purchases to localStorage:", allPurchases);
+        localStorage.setItem('purchases', JSON.stringify([...existingPurchases, ...newPurchases]));
         
         alert("✅ Payment successful! Your books are ready for download.");
         clearCart();
         navigate("/my-books");
-      } else {
-        setError(response.data.message || "Payment failed");
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || "An error occurred during payment");
@@ -269,63 +193,32 @@ function SimpleCheckoutForm() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Details</h3>
                 
-                {/* Card Number */}
+                {/* Stripe Card Element */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Card Number
+                    Card Details
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={handleCardNumberChange}
-                      placeholder="4242 4242 4242 4242"
-                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
+                  <div className="border border-gray-300 rounded-lg p-3 bg-white">
+                    <CardElement
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#424770',
+                            '::placeholder': {
+                              color: '#aab7c4',
+                            },
+                          },
+                          invalid: {
+                            color: '#9e2146',
+                          },
+                        },
+                      }}
                     />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-1">
-                      <span className="text-xl">💳</span>
-                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ✓ Valid card: must be 13-19 digits
+                  <p className="text-xs text-gray-500 mt-2">
+                    💡 Test card: 4242 4242 4242 4242 | Any future date | Any 3-digit CVC
                   </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Expiry Date */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      value={expiry}
-                      onChange={handleExpiryChange}
-                      placeholder="MM/YY"
-                      maxLength="5"
-                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-                    <p className="text-xs text-gray-500 mt-1">MM/YY Example: 12/25</p>
-                  </div>
-                  
-                  {/* CVC */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      CVC
-                    </label>
-                    <input
-                      type="text"
-                      value={cvc}
-                      onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="123"
-                      maxLength="4"
-                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-                    <p className="text-xs text-gray-500 mt-1">3 or 4 digits</p>
-                  </div>
                 </div>
               </div>
 
@@ -412,7 +305,9 @@ export default function Checkout() {
   return (
     <>
       <Header />
-      <SimpleCheckoutForm />
+      <Elements stripe={stripePromise}>
+        <CheckoutFormContent />
+      </Elements>
     </>
   );
 }

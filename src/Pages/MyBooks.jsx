@@ -73,38 +73,32 @@ export default function MyBooks() {
       setDownloadingId(bookId);
       const token = Cookies.get("token");
       
-      // First, try backend verification
-      try {
-        const purchaseCheckRes = await fetch("http://localhost:5000/api/verify-purchase", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-          body: JSON.stringify({ bookId }),
-        });
-
-        if (purchaseCheckRes.status === 403 || !purchaseCheckRes.ok) {
-          // Check localStorage as fallback
-          const localPurchases = JSON.parse(localStorage.getItem('purchases')) || [];
-          const purchased = localPurchases.some(item => item._id === bookId);
+      // Check localStorage first (always available)
+      const localPurchases = JSON.parse(localStorage.getItem('purchases')) || [];
+      const purchased = localPurchases.some(item => item._id === bookId);
+      
+      // If not in localStorage, try backend verification
+      if (!purchased) {
+        try {
+          const purchaseCheckRes = await axios.post(
+            "http://localhost:5000/api/verify-purchase",
+            { bookId },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true,
+            }
+          );
           
-          if (!purchased) {
+          if (!purchaseCheckRes.data.verified) {
             alert("❌ You don't have access to this book!");
             return;
           }
-        }
-      } catch (err) {
-        // Backend not available, check localStorage
-        const localPurchases = JSON.parse(localStorage.getItem('purchases')) || [];
-        const purchased = localPurchases.some(item => item._id === bookId);
-        
-        if (!purchased) {
+        } catch {
+          // Backend verification failed (404 or unavailable)
+          console.warn("Backend verification not available, checking localStorage only...");
           alert("❌ You don't have access to this book!");
           return;
         }
-        console.debug("Using localStorage for purchase verification", err);
       }
 
       // Proceed with download
