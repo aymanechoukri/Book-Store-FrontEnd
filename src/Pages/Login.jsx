@@ -41,12 +41,12 @@ export default function Login() {
       setShow(false);
       Cookies.set("token", res.data.token, {
         expires: 1,
-        secure: true,
-        sameSite: "Strict",
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? "Strict" : "Lax",
       });
       Cookies.set("role", res.data.role, {
         expires: 1,
-        sameSite: "Strict",
+        sameSite: process.env.NODE_ENV === 'production' ? "Strict" : "Lax",
       });
       Go("/");
     } catch (err) {
